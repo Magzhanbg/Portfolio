@@ -1,0 +1,55 @@
+3.1
+SELECT 1 AS Row, 
+COUNT(searcher_uid) AS DAU, 
+COUNT(case when event_name in ('opened_chat', 'viewed_phone_num') then 1 end) as contacts 
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE cast(event_ts AS string) LIKE '%2023-08-14%'; 
+
+3.2
+SELECT 1 AS Row,
+(COUNT(case when event_name IN ('opened_chat') then 1 END)/COUNT(event_name)) AS share_chat,
+(COUNT(case when event_name in ('viewed_phone_num') then 1 END)/COUNT(event_name)) AS share_phone
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE cast(event_ts as string) like '%2023-08-14%' or cast(event_ts as string) like '%2023-02-12T11:34%'; 
+
+3.3 
+SELECT ROUND(COUNTIF(searcher_city_name != adv_city) / COUNT(*), 2) AS share_city_not_match
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE event_name = 'contact_initiated'
+OR EXTRACT(MONTH FROM event_ts) = 8;
+
+3.4
+WITH teaser_view AS (
+SELECT DATE(event_ts) as event_date,searcher_uid
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE event_name = 'viewed_listing'
+),
+card_view AS (
+SELECT DATE(event_ts) as event_date,searcher_uid
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE event_name = 'opened_advert_page'
+),
+contact_view AS (
+SELECT DATE(event_ts) as event_date,searcher_uid
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE event_name = 'viewed_phone_num'
+),
+funnel AS (
+SELECT t.event_date,
+COUNT(DISTINCT t.searcher_uid) AS dau,
+COUNT(DISTINCT c.searcher_uid) AS conversions
+FROM teaser_view t
+JOIN card_view cv ON t.searcher_uid = cv.searcher_uid AND t.event_date = cv.event_date
+JOIN contact_view c ON cv.searcher_uid = c.searcher_uid AND cv.event_date = c.event_date
+GROUP BY t.event_date
+)
+SELECT event_date,dau,conversions,ROUND((conversions * 100.0) / dau, 1) AS cr
+FROM funnel
+ORDER BY event_date DESC;
+
+3.5
+SELECT 1 AS Row, cat_1_name AS category, COUNT(*) AS queries
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE cat_1_name IS NOT NULL
+GROUP BY cat_1_name
+ORDER BY COUNT(*) DESC;

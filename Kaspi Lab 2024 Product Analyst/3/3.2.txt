@@ -1,0 +1,37 @@
+SELECT event_name, COUNT(*) AS event_count
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE event_name IN ('viewed_phone_num', 'opened_chat')
+  AND event_ts >= DATETIME '2023-08-15T00:00:00'
+  AND event_ts < DATETIME '2023-08-20T00:00:00'
+GROUP BY event_name
+ORDER BY COUNT(*) DESC;
+
+АБ тест проводился с 3 по 14 августа вот данные с 22 июля до 2 августа viewed_phone_num-6380,opened_chat-3195.
+Данные во время аб теста с 3 по 14 августа viewed_phone_num-74934,opened_chat-37376.
+И данные с 15 августа по 26 августа viewed_phone_num 75927,opened_chat 37699.
+
+1.
+(3195/6380)x100%=50.08% До теста
+(37376/74943)x100%=49.85% Во время теста
+(37699/75927)x100%=49.64% После теста
+
+Конверсия уменьшилась, но поток увеличился возможно это связано с тем что у пользователей больше доверия во время теста.
+
+2.
+Думаю нужны больше данных и измерять метрики,даже время года зависит на количество взаимодействий с клиентом поэтому нужны анализы.
+3.
+SELECT event_name, COUNT(*) AS event_count
+FROM `kaspi-mobile.T_KASPI_TEST_DATA.t_kaspi_test_data`
+WHERE event_ts >= DATETIME '2023-08-03T00:00:00'
+AND event_ts < DATETIME '2023-08-14T00:00:00'
+GROUP BY event_name
+ORDER BY event_count DESC;
+
+Result:
+opened_advert_page-3161039	
+viewed_listing-1327964
+text_query_searched-608496
+viewed_phone_num-74934
+opened_chat-37376
+
+4.Retention,time on page,количество новых пользователей может быть итд
